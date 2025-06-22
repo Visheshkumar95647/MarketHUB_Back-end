@@ -7,31 +7,9 @@ const VeryifyToken = require("../middleware");
 const ProductSchema = require("../Models/Product");
 const dotenv = require("dotenv");
 dotenv.config();
-const multer = require("multer");
 const VerifyToken = require("../middleware");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "ProfileImage/images");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now();
-    cb(null, uniqueSuffix + file.originalname);
-  },
-});
-
-const upload = multer({ storage: storage });
-
-const ProductStroage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "ProductImage/product");
-  },
-  filename: function (req, file, cb) {
-    const suffix = Date.now();
-    cb(null, suffix + file.originalname);
-  },
-});
-
-const ProductUpload = multer({ storage: ProductStroage });
+const upload = require('../imageUpload');
+const ProductUpload = require('../productImageUpload');
 
 router.post("/register", upload.single("image"), async (req, res) => {
   try {
@@ -44,13 +22,11 @@ router.post("/register", upload.single("image"), async (req, res) => {
         .status(400)
         .json({ error: "User with these credentials already exists" });
     }
-
-    // Generate salt and hash the password
     const salt = await bcrypt.genSalt(10);
     const secPass = await bcrypt.hash(req.body.password, salt);
 
     const imagename = req.file.filename;
-    // Create new user
+  
     user = await UserSchema.create({
       image: imagename,
       name: req.body.name,
@@ -133,7 +109,9 @@ router.get("/allprofile", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
-//Product
+
+
+//Product images
 
 router.post(
   "/product",
